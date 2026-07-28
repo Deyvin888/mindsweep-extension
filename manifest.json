@@ -3,7 +3,8 @@
   "name": "MindSweep",
   "version": "1.0",
   "permissions": [
-    "notifications"
+    "notifications",
+    "alarms"
   ],
   "background": {
     "service_worker": "background.js"
