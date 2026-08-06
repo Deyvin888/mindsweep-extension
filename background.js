@@ -5,76 +5,128 @@ let timerState = {
     endTime: null
 };
 
-//listens for messages coming from popup.js
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    //recalculates remaining time accurately if timer is active
-    if (timerState.isRunning && timerState.endTime) {
-        const remaining = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
-        timerState.timeLeft = remaining;
+//save timer to storage
+async function saveState() {
+    await chrome.storage.local.set({ timerState });
+}
+
+
+//load timer from storage
+async function loadState() {
+    const result = await chrome.storage.local.get("timerState");
+
+    if (result.timerState) {
+        timerState = result.timerState;
     }
 
-    if (message.action === 'GET_STATE') {
-        sendResponse(timerState);
-    } 
-    else if (message.action === 'TOGGLE_TIMER') {
-        if (!timerState.isRunning) {
-            startTimer();
-        } else {
-            pauseTimer();
+    // If timer was running, calculate remaining time
+    if (timerState.isRunning && timerState.endTime) {
+        timerState.timeLeft = Math.max(
+            0,
+            Math.ceil((timerState.endTime - Date.now()) / 1000)
+        );
+
+        if (timerState.timeLeft === 0) {
+            timerState.isRunning = false;
+            timerState.endTime = null;
+            await saveState();
         }
-        sendResponse(timerState);
-    } 
-    else if (message.action === 'RESET_TIMER') {
-        resetTimer();
-        sendResponse(timerState);
     }
-    
+}
+
+//load saved timer when service worker starts
+loadState();
+
+//message listener
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+    (async () => {
+
+        await loadState();
+
+        if (message.action === "GET_STATE") {
+            sendResponse(timerState);
+        }
+
+        else if (message.action === "TOGGLE_TIMER") {
+
+            if (!timerState.isRunning) {
+                startTimer();
+            } else {
+                pauseTimer();
+            }
+
+            sendResponse(timerState);
+        }
+
+        else if (message.action === "RESET_TIMER") {
+            resetTimer();
+            sendResponse(timerState);
+        }
+
+    })();
+
     return true;
 });
 
-//start/resume the timer
-function startTimer() {
+//start timer
+async function startTimer() {
+
     timerState.isRunning = true;
-    timerState.endTime = Date.now() + (timerState.timeLeft * 1000);
+    timerState.endTime = Date.now() + timerState.timeLeft * 1000;
 
-    //schedules the system alarm to wake up when timer hits 0
-    chrome.alarms.create('mindsweep_alarm', { 
-        when: timerState.endTime 
+    chrome.alarms.create("mindsweep_alarm", {
+        when: timerState.endTime
     });
+
+    await saveState();
 }
 
-//pause the timer
-function pauseTimer() {
+//pause timer
+async function pauseTimer() {
+
+    timerState.timeLeft = Math.max(
+        0,
+        Math.ceil((timerState.endTime - Date.now()) / 1000)
+    );
+
     timerState.isRunning = false;
-    timerState.timeLeft = Math.max(0, Math.round((timerState.endTime - Date.now()) / 1000));
     timerState.endTime = null;
-    
-    chrome.alarms.clear('mindsweep_alarm');
+
+    chrome.alarms.clear("mindsweep_alarm");
+
+    await saveState();
 }
 
-//reset the timer
-function resetTimer() {
-    timerState.isRunning = false;
+//reset timer
+async function resetTimer() {
+
     timerState.timeLeft = 25 * 60;
+    timerState.isRunning = false;
     timerState.endTime = null;
-    
-    chrome.alarms.clear('mindsweep_alarm');
+
+    chrome.alarms.clear("mindsweep_alarm");
+
+    await saveState();
 }
 
-//system event, executes when the timer reaches zero
-chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === 'mindsweep_alarm') {
-        timerState.isRunning = false;
-        timerState.timeLeft = 0;
-        timerState.endTime = null;
+//timer finished
+chrome.alarms.onAlarm.addListener(async (alarm) => {
 
-        //trigger the google chrome desktop notification
-        chrome.notifications.create('mindsweep_finished', {
-            type: 'basic',
-            iconUrl: 'notifications.png',
-            title: 'MindSweep Complete!',
-            message: 'Your focus session is done. Take a quick break!',
-            priority: 2
-        });
-    }
+    if (alarm.name !== "mindsweep_alarm")
+        return;
+
+    timerState.timeLeft = 0;
+    timerState.isRunning = false;
+    timerState.endTime = null;
+
+    await saveState();
+
+    chrome.notifications.create("mindsweep_finished", {
+        type: "basic",
+        iconUrl: "notifications.png",
+        title: "MindSweep Complete!",
+        message: "Your focus session is done. Take a quick break!",
+        priority: 2
+    });
 });
