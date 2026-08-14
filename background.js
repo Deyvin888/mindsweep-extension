@@ -124,7 +124,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
     chrome.notifications.create("mindsweep_finished", {
         type: "basic",
-        iconUrl: "notifications.png",
+        iconUrl: "assets/notifications.png",
         title: "MindSweep Complete!",
         message: "Your focus session is done. Take a quick break!",
         priority: 2
