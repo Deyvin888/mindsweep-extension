@@ -9,26 +9,33 @@
 
     <h1>MindSweep</h1>
 
+    <div id="timer">25:00</div>
+
     <label for="duration">Timer duration:</label>
 
     <select id="duration">
-    <option value="25">25 minutes</option>
-    <option value="60">60 minutes</option>
-    <option value="90">90 minutes</option>
-    <option value="custom">Custom</option>
+        <option value="25">25 minutes</option>
+        <option value="60">60 minutes</option>
+        <option value="90">90 minutes</option>
+        <option value="custom">Custom</option>
     </select>
 
     <input
-    type="number"
-    id="custom-duration"
-    placeholder="Minutes"
-    min="1"
-    hidden
+        type="number"
+        id="custom-duration"
+        placeholder="Minutes"
+        min="1"
+        hidden
     >
 
     <div class="action-container">
-        <button id="start-btn" class="btn-start" type="button">Start Timer</button>
-        <button id="reset-btn" class="btn-reset" type="button">Reset</button>
+        <button id="start-btn" class="btn-start" type="button">
+            Start Timer
+        </button>
+
+        <button id="reset-btn" class="btn-reset" type="button">
+            Reset
+        </button>
     </div>
 
     <script src="popup.js"></script>
