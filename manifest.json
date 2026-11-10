@@ -12,7 +12,7 @@
   },
   "description": "A relaxed timer to sweep away distractions.",
   "icons": {
-    "128": "assets/MindSweep.png"
+    "128": "assets/MindSweep_v2.png"
   },
   "action": {
     "default_popup": "popup.html"
