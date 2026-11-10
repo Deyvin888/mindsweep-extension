@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MindSweep",
-  "version": "1.0",
+  "version": "1.0.0",
   "permissions": [
     "notifications",
     "alarms",
@@ -11,6 +11,9 @@
     "service_worker": "background.js"
   },
   "description": "A relaxed timer to sweep away distractions.",
+  "icons": {
+    "128": "assets/MindSweep.png"
+  },
   "action": {
     "default_popup": "popup.html"
   }
